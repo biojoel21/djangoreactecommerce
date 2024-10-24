@@ -1,7 +1,7 @@
 import { useAuthStore } from '../store/auth'
 import axios from './axios'
 import jwt_decode from 'jwt-decode'
-import Cookie from 'js-cookie'
+import Cookies from 'js-cookie'
 
 export const login = async (email, password) => {
     try {
@@ -47,7 +47,61 @@ export const register = async (full_name, email, phone, password, password2) => 
 }
 
 export const logout = () => {
-    Cookie.remove('access_token')
-    Cookie.remove('refresh_token')
+    Cookies.remove('access_token')
+    Cookies.remove('refresh_token')
     useAuthStore.setState.setUser(null)
+
+    //Alert user that logout was successful
+
+}
+
+export const setUser = async () => {
+    const accessToken = Cookies.get('access_token')
+    const refreshToken = Cookies.get('refresh_token')
+
+    if(!accessToken || !refreshToken) {
+        return;
+    }
+
+    if(isAccessTokenExpired(accessToken)) {
+        const response = await getRefreshToken(refreshToken)
+        setAuthUser(response.access, response.refresh)
+    }else{
+        setAuthUser(accessToken, refreshToken)
+    }
+    
+}
+
+export const setAuthUser = (accessToken, refreshToken) => {    
+    Cookies.set('access_token', accessToken, { 
+        expires: 1,
+        secure: true
+    })
+    Cookies.set('refresh_token', refreshToken, { 
+        expires: 7,
+        secure: true
+    })
+
+    if(user){
+        useAuthStore.setState.setUser(user)
+    }
+    useAuthStore.getState().setLoading(false)
+}
+
+export const getRefreshToken = async () => {
+    const refreshToken = Cookies.get('refresh_token')
+    const response = await axios.post('user/token/refresh/', { 
+        refresh: refreshToken 
+    })
+    return response.data
+}
+
+export const isAccessTokenExpired = (accessToken) => {
+    try{
+        const decodedToken = jwt_decode(accessToken)
+        return decodedToken.exp < Date.now() / 100
+    }catch(error){
+        console.log(error);
+        return true
+    }
 }
