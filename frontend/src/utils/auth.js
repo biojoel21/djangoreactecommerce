@@ -77,30 +77,34 @@ export const setAuthUser = (accessToken, refreshToken) => {
         expires: 1,
         secure: true
     })
-    Cookies.set('refresh_token', refreshToken, { 
+    
+    Cookies.set('refresh_token', refreshToken, {
         expires: 7,
         secure: true
     })
 
-    if(user){
-        useAuthStore.setState.setUser(user)
+    const user = jwt_decode(accessToken) ?? null
+
+    if (user) {
+        useAuthStore.getState().setUser(user)
     }
     useAuthStore.getState().setLoading(false)
 }
 
-export const getRefreshToken = async () => {
+export const refreshToken = async () => {
     const refreshToken = Cookies.get('refresh_token')
-    const response = await axios.post('user/token/refresh/', { 
-        refresh: refreshToken 
+    const response = await axios.post('user/token/refresh/', {
+        refresh: refreshToken
     })
+
     return response.data
 }
 
 export const isAccessTokenExpired = (accessToken) => {
-    try{
+    try {
         const decodedToken = jwt_decode(accessToken)
         return decodedToken.exp < Date.now() / 100
-    }catch(error){
+    } catch (error) {
         console.log(error);
         return true
     }
