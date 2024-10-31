@@ -14,9 +14,9 @@ function Login() {
 
     useEffect(() => {
         if(isLoggedIn()) {
-            navigate('/')
+            navigate('/dashboard')
         }
-    })
+    }, [])
 
     const resetForm = () => {
         setEmail('')
@@ -31,7 +31,7 @@ function Login() {
         if(error) {
             alert(error)
         } else {
-            navigate('/')
+            navigate('/dashboard')
             resetForm()
         }
         setIsLoading(false)

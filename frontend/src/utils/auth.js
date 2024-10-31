@@ -49,8 +49,8 @@ export const register = async (full_name, email, phone, password, password2) => 
 export const logout = () => {
     Cookies.remove('access_token')
     Cookies.remove('refresh_token')
-    useAuthStore.setState.setUser(null)
-
+    //useAuthStore.setState().setUser(null) #codigo orignal del video mal escrito
+    useAuthStore.setState({ user: null })
     //Alert user that logout was successful
 
 }
