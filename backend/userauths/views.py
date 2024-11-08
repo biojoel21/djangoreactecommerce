@@ -1,10 +1,11 @@
+from urllib import response
 from django.shortcuts import render # type: ignore
 from userauths.models import User, Profile
 from userauths.serializer import MyTokenObtainPairSerializer, RegisterSerializer, UserSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView # type: ignore
 from rest_framework import generics #type: ignore
 from rest_framework.permissions import IsAuthenticated, AllowAny #type: ignore
-
+from rest_framework import status #type: ignore
 import random
 import shortuuid # type: ignore
 
@@ -41,3 +42,25 @@ class PasswordResetEmailVerify(generics.RetrieveAPIView):
             print("link =", link)
 
         return user
+    
+class PasswordChangeView(generics.CreateAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = UserSerializer
+
+    def create(self, request, *args, **kwargs):
+        payload = request.data
+        otp = payload['otp']
+        uidb64 = payload['uidb64']
+        reset_token = payload['reset_token']
+        password = payload['password']      
+
+        user = User.objects.get(id=uidb64, otp=otp)
+        if user: 
+            user.set_password(password)
+            user.otp = ""
+            user.reset_token = ""
+            user.save() 
+
+            return response({'message': 'Password changed successfully'}, status=status.HTTP_201_CREATED)
+        else:
+            return response({'message': 'Invalid OTP'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
